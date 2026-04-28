@@ -3,45 +3,32 @@
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        body { margin: 0; background: #FFD700; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
-        video { width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0; display: none; }
-        #controls { z-index: 10; text-align: center; padding: 20px; }
-        button { padding: 15px 30px; font-size: 18px; cursor: pointer; background: #000; color: #fff; border: none; border-radius: 5px; }
-        #status { margin-top: 10px; font-weight: bold; color: #d00; }
+        body { margin: 0; background: #000; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
+        video { width: 100%; height: 100%; object-fit: cover; background: #222; }
+        #btn { position: absolute; z-index: 20; padding: 15px 30px; background: white; border-radius: 10px; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
-
-    <div id="controls">
-        <img src="https://ar-js-org.github.io/AR.js/data/images/hiro.png" width="100"><br><br>
-        <button id="start">ACTIVATE CAMERA</button>
-        <div id="status">Status: Waiting for user...</div>
-    </div>
-    
-    <video id="v" playsinline muted></video>
+    <button id="btn">START CAMERA VIEW</button>
+    <video id="v" autoplay muted playsinline></video>
 
     <script>
-        const btn = document.getElementById('start');
-        const video = document.getElementById('v');
-        const status = document.getElementById('status');
+        const v = document.getElementById('v');
+        const b = document.getElementById('btn');
 
-        btn.onclick = async () => {
-            status.innerText = "Requesting permission...";
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { facingMode: "environment" } 
-                });
-                video.srcObject = stream;
-                video.style.display = "block";
-                video.play();
-                document.getElementById('controls').style.display = "none";
-            } catch (err) {
-                status.innerText = "Error: " + err.name;
-                console.error(err);
-                if(err.name === "SecurityError") {
-                    status.innerText = "Error: Blocked by Blogger Security Settings.";
-                }
-            }
+        b.onclick = () => {
+            navigator.mediaDevices.getUserMedia({ 
+                video: { facingMode: "environment" } 
+            })
+            .then(stream => {
+                v.srcObject = stream;
+                // CRITICAL: Some browsers need an explicit play call after setting srcObject
+                v.onloadedmetadata = () => {
+                    v.play().catch(e => console.error("Final play error:", e));
+                };
+                b.style.display = 'none';
+            })
+            .catch(err => alert("Camera blocked: " + err.message));
         };
     </script>
 </body>
